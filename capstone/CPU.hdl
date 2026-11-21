@@ -1,0 +1,30 @@
+CHIP CPU {
+    IN inM[16], instruction[16], reset;
+    OUT outM[16], writeM, addressM[15], pc[15];
+
+    PARTS:
+    Not(in=instruction[15], out=isA);
+    Mux16(a=outM, b=instruction, sel=isA, out=aIn);
+    Or(a=isA, b=instruction[5], out=loadA);
+    ARegister(in=aIn, load=loadA, out=aOut, out[0..14]=addressM);
+
+    Mux16(a=aOut, b=inM, sel=instruction[12], out=aluY);
+    And(a=instruction[15], b=instruction[4], out=loadD);
+    DRegister(in=outM, load=loadD, out=dOut);
+    And(a=instruction[15], b=instruction[3], out=writeM);
+
+    Not(in=ng, out=notNg);
+    Not(in=zr, out=notZr);
+    And(a=notNg, b=notZr, out=positive);
+    And(a=instruction[2], b=ng, out=jlt);
+    And(a=instruction[1], b=zr, out=jeq);
+    And(a=instruction[0], b=positive, out=jgt);
+    Or(a=jlt, b=jeq, out=jleq);
+    Or(a=jleq, b=jgt, out=jumpCondition);
+    And(a=instruction[15], b=jumpCondition, out=loadPC);
+    PC(in=aOut, load=loadPC, inc=true, reset=reset, out[0..14]=pc);
+    // Hack CPU output bus carries the ALU result.
+    ALU(x=dOut, y=aluY, zx=instruction[11], nx=instruction[10],
+        zy=instruction[9], ny=instruction[8], f=instruction[7],
+        no=instruction[6], out=outM, zr=zr, ng=ng);
+}

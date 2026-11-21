@@ -1,0 +1,56 @@
+// K = 90; row 90 begins at SCREEN + 32*90 = 19264.
+// The box is 20 rows tall and 48 pixels (3 screen words) wide.
+(MAIN)
+    @KBD
+    D=M
+    @PRESSED
+    D;JNE
+    @color
+    M=0
+    @DRAW
+    0;JMP
+(PRESSED)
+    @color
+    M=-1
+(DRAW)
+    @19264
+    D=A
+    @rowAddress
+    M=D
+    @20
+    D=A
+    @rowsRemaining
+    M=D
+(ROW_LOOP)
+    @rowAddress
+    D=M
+    @wordAddress
+    M=D
+    @3
+    D=A
+    @wordsRemaining
+    M=D
+(WORD_LOOP)
+    @color
+    D=M
+    @wordAddress
+    A=M
+    M=D
+    @wordAddress
+    M=M+1
+    @wordsRemaining
+    M=M-1
+    D=M
+    @WORD_LOOP
+    D;JGT
+    @32
+    D=A
+    @rowAddress
+    M=D+M
+    @rowsRemaining
+    M=M-1
+    D=M
+    @ROW_LOOP
+    D;JGT
+    @MAIN
+    0;JMP
